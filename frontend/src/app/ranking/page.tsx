@@ -1,27 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Player } from '@/lib/types';
-import api from '@/lib/api';
+import Link from 'next/link';
 
 export default function RankingPage() {
-  const [players, setPlayers] = useState<Player[]>([]);
   const [filterPosition, setFilterPosition] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchRanking();
+    // Placeholder - será implementado quando a API pública estiver pronta
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLoading(false);
   }, [filterPosition]);
-
-  const fetchRanking = async () => {
-    try {
-      // Placeholder - será implementado quando a API pública estiver pronta
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching ranking:', error);
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -32,9 +22,9 @@ export default function RankingPage() {
             <h1 className="text-2xl font-bold text-gray-900">
               Football Analytics - Ranking Público
             </h1>
-            <a href="/" className="text-blue-600 hover:underline">
+            <Link href="/" className="text-blue-600 hover:underline">
               Voltar ao Início
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -74,12 +64,12 @@ export default function RankingPage() {
                 <p className="text-gray-500 mb-4">
                   Ranking público será disponível em breve
                 </p>
-                <a
+                <Link
                   href="/register"
                   className="text-blue-600 hover:underline"
                 >
                   Cadastre-se para acesso completo
-                </a>
+                </Link>
               </div>
             )}
           </div>

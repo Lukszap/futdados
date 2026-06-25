@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import os
+import json
+import time
 import uuid
-from datetime import datetime
+import random
 
-from app.database import get_db
-from app.models.database import Video, Match
+from app.database import get_db, SessionLocal
+from app.models.database import Video, Match, Player, PlayerMatchMetrics
 from app.api.auth import get_current_club
 from app.config import settings
 from pydantic import BaseModel
@@ -20,7 +22,7 @@ class VideoResponse(BaseModel):
     original_filename: str
     file_path: str
     upload_status: str
-    processing_progress: float
+    processing_progress: Optional[float] = 0.0
 
     class Config:
         from_attributes = True
@@ -31,28 +33,82 @@ def ensure_upload_dirs():
     os.makedirs(settings.PROCESSED_VIDEO_PATH, exist_ok=True)
 
 
-def process_video_task(video_id: int, db: Session):
-    """Background task to process video with ML pipeline"""
-    from app.ml.pipeline import MLPipeline
+def _generate_mock_metrics(player_id: int, match_id: int) -> PlayerMatchMetrics:
+    """Generate realistic mock metrics for a player in a match.
 
-    video = db.query(Video).filter(Video.id == video_id).first()
-    if not video:
-        return
+    Used while the real ML pipeline (YOLOv8 + ByteTrack) is not installed.
+    """
+    passes_attempted = random.randint(20, 70)
+    passes_completed = random.randint(int(passes_attempted * 0.6), passes_attempted)
+    shots_total = random.randint(0, 6)
+    shots_on_target = random.randint(0, shots_total)
+    dribbles_attempted = random.randint(0, 12)
+    dribbles_completed = random.randint(0, dribbles_attempted)
+    tackles_attempted = random.randint(0, 15)
+    tackles_completed = random.randint(0, tackles_attempted)
 
+    heatmap = [
+        {"x": round(random.uniform(0, 1), 3), "y": round(random.uniform(0, 1), 3)}
+        for _ in range(20)
+    ]
+
+    return PlayerMatchMetrics(
+        player_id=player_id,
+        match_id=match_id,
+        total_distance=round(random.uniform(7000, 12000), 1),
+        average_speed=round(random.uniform(6, 9), 2),
+        max_speed=round(random.uniform(24, 34), 2),
+        sprints_count=random.randint(10, 45),
+        passes_attempted=passes_attempted,
+        passes_completed=passes_completed,
+        pass_success_rate=round(passes_completed / passes_attempted * 100, 1) if passes_attempted else 0.0,
+        shots_total=shots_total,
+        shots_on_target=shots_on_target,
+        dribbles_attempted=dribbles_attempted,
+        dribbles_completed=dribbles_completed,
+        tackles_attempted=tackles_attempted,
+        tackles_completed=tackles_completed,
+        average_position_x=round(random.uniform(0, 1), 3),
+        average_position_y=round(random.uniform(0, 1), 3),
+        time_in_opponent_half=round(random.uniform(600, 3000), 1),
+        expected_goals=round(random.uniform(0, 1.5), 3),
+        expected_assists=round(random.uniform(0, 1.2), 3),
+        heatmap_data=json.dumps(heatmap),
+    )
+
+
+def process_video_task(video_id: int):
+    """Background task that simulates the ML pipeline.
+
+    Creates its own DB session because the request-scoped session is closed
+    once the upload response is returned.
+    """
+    db = SessionLocal()
     try:
+        video = db.query(Video).filter(Video.id == video_id).first()
+        if not video:
+            return
+
         video.upload_status = "processing"
         video.processing_progress = 0.0
         db.commit()
 
-        # Initialize ML pipeline
-        ml_pipeline = MLPipeline()
-
-        # Process video (placeholder - will implement full pipeline)
-        # For now, just simulate processing
-        import time
-        for i in range(0, 101, 10):
-            time.sleep(0.5)
+        for i in range(10, 101, 10):
+            time.sleep(0.6)
             video.processing_progress = float(i)
+            db.commit()
+
+        # Generate mock per-player metrics for every player of the club.
+        match = db.query(Match).filter(Match.id == video.match_id).first()
+        if match:
+            players = db.query(Player).filter(Player.club_id == match.club_id).all()
+            for player in players:
+                existing = db.query(PlayerMatchMetrics).filter(
+                    PlayerMatchMetrics.player_id == player.id,
+                    PlayerMatchMetrics.match_id == match.id,
+                ).first()
+                if existing is None:
+                    db.add(_generate_mock_metrics(player.id, match.id))
             db.commit()
 
         video.upload_status = "processed"
@@ -60,9 +116,14 @@ def process_video_task(video_id: int, db: Session):
         db.commit()
 
     except Exception as e:
-        video.upload_status = "failed"
-        db.commit()
+        db.rollback()
+        video = db.query(Video).filter(Video.id == video_id).first()
+        if video:
+            video.upload_status = "failed"
+            db.commit()
         print(f"Error processing video: {e}")
+    finally:
+        db.close()
 
 
 @router.post("/upload/{match_id}", response_model=VideoResponse)
@@ -108,7 +169,7 @@ async def upload_video(
 
     # Start background processing
     if background_tasks:
-        background_tasks.add_task(process_video_task, new_video.id, db)
+        background_tasks.add_task(process_video_task, new_video.id)
 
     return new_video
 

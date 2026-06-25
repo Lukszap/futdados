@@ -34,11 +34,14 @@ export interface Championship {
 
 export interface Match {
   id: number;
+  championship_id?: number;
+  championship_name?: string;
   home_team: string;
   away_team: string;
   match_date?: string;
   venue?: string;
   status: string;
+  videos_count?: number;
 }
 
 export interface Video {
@@ -46,13 +49,14 @@ export interface Video {
   original_filename: string;
   file_path: string;
   upload_status: string;
-  processing_progress: number;
+  processing_progress?: number;
 }
 
 export interface PlayerMetrics {
   id: number;
   player_id: number;
-  match_id: number;
+  player_name?: string;
+  match_id?: number;
   total_distance?: number;
   average_speed?: number;
   max_speed?: number;
