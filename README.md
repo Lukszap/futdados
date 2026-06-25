@@ -58,8 +58,14 @@ football-analytics/
 - [x] API de Upload de Vídeos
 - [x] API de Subscriptions (Stripe)
 - [x] ML Pipeline base (YOLOv8 + ByteTrack)
-- [ ] Frontend Next.js
-- [ ] Dashboard Clubes
+- [x] Frontend Next.js
+- [x] Landing page com pricing
+- [x] Login e registro
+- [x] Dashboard básico
+- [ ] Gestão completa de jogadores
+- [ ] Gestão completa de partidas
+- [ ] Upload de vídeos real
+- [ ] Ranking filtrável
 
 ### ⏳ FASE 3: Relatórios Individuais
 - [ ] Geração de PDFs
