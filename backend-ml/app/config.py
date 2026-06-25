@@ -3,8 +3,10 @@ from typing import List
 
 
 class Settings(BaseSettings):
-    # Database
+    # Database - Supabase
     DATABASE_URL: str
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # JWT
@@ -12,11 +14,11 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_MINUTES: int = 1440
 
-    # Stripe
-    STRIPE_API_KEY: str
-    STRIPE_WEBHOOK_SECRET: str
-    STRIPE_PRICE_ID_BASIC: str
-    STRIPE_PRICE_ID_PRO: str
+    # Stripe (opcional para desenvolvimento)
+    STRIPE_API_KEY: str = "sk_test_placeholder"
+    STRIPE_WEBHOOK_SECRET: str = "whsec_placeholder"
+    STRIPE_PRICE_ID_BASIC: str = "price_placeholder"
+    STRIPE_PRICE_ID_PRO: str = "price_placeholder"
 
     # API
     API_HOST: str = "0.0.0.0"
