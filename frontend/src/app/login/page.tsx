@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
+import { getApiErrorMessage } from '@/lib/errors';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,8 +20,8 @@ export default function LoginPage() {
     try {
       await login(email, password);
       window.location.href = '/dashboard';
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erro ao fazer login');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Erro ao fazer login'));
     }
   };
 

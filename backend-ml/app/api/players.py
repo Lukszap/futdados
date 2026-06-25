@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.database import get_db
 from app.models.database import Player, Club
@@ -13,20 +13,33 @@ router = APIRouter()
 
 class PlayerCreate(BaseModel):
     name: str
-    age: int = None
-    position: str = None
-    jersey_number: int = None
-    height: float = None
-    weight: float = None
-    photo_url: str = None
+    age: Optional[int] = None
+    position: Optional[str] = None
+    jersey_number: Optional[int] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    photo_url: Optional[str] = None
+
+
+class PlayerUpdate(BaseModel):
+    name: Optional[str] = None
+    age: Optional[int] = None
+    position: Optional[str] = None
+    jersey_number: Optional[int] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    photo_url: Optional[str] = None
 
 
 class PlayerResponse(BaseModel):
     id: int
     name: str
-    age: int
-    position: str
-    jersey_number: int
+    age: Optional[int] = None
+    position: Optional[str] = None
+    jersey_number: Optional[int] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    photo_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -67,3 +80,44 @@ async def get_player(
     if not player:
         raise HTTPException(status_code=404, detail="Player not found")
     return player
+
+
+@router.put("/{player_id}", response_model=PlayerResponse)
+async def update_player(
+    player_id: int,
+    player_data: PlayerUpdate,
+    current_club: Club = Depends(get_current_club),
+    db: Session = Depends(get_db)
+):
+    player = db.query(Player).filter(
+        Player.id == player_id,
+        Player.club_id == current_club.id
+    ).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    update_data = player_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(player, field, value)
+
+    db.commit()
+    db.refresh(player)
+    return player
+
+
+@router.delete("/{player_id}", status_code=204)
+async def delete_player(
+    player_id: int,
+    current_club: Club = Depends(get_current_club),
+    db: Session = Depends(get_db)
+):
+    player = db.query(Player).filter(
+        Player.id == player_id,
+        Player.club_id == current_club.id
+    ).first()
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    db.delete(player)
+    db.commit()
+    return None
