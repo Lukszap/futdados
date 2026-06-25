@@ -27,6 +27,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+    user_type: Optional[str] = 'individual'  # 'individual' or 'club'
 
 
 class UserResponse(BaseModel):
@@ -99,23 +100,31 @@ async def get_current_club(current_user: User = Depends(get_current_user), db: S
 
 @router.post("/register", response_model=UserResponse)
 async def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    # Check if user exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    try:
+        # Check if user exists
+        existing_user = db.query(User).filter(User.email == user_data.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create user
-    hashed_password = get_password_hash(user_data.password)
-    new_user = User(
-        email=user_data.email,
-        hashed_password=hashed_password,
-        full_name=user_data.full_name
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+        # Create user
+        hashed_password = get_password_hash(user_data.password)
+        new_user = User(
+            email=user_data.email,
+            hashed_password=hashed_password,
+            full_name=user_data.full_name,
+            user_type=user_data.user_type
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    return new_user
+        return new_user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Database error during registration: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Database error during registration")
 
 
 @router.post("/login", response_model=Token)

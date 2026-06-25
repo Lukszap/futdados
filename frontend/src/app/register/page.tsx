@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [userType, setUserType] = useState<'individual' | 'club'>('individual');
   const [error, setError] = useState('');
   const { register, isLoading } = useAuth();
 
@@ -19,7 +20,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      await register(email, password, fullName);
+      await register(email, password, fullName, userType);
       window.location.href = '/login';
     } catch (err) {
       setError(getApiErrorMessage(err, 'Erro ao criar conta'));
@@ -52,6 +53,32 @@ export default function RegisterPage() {
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Seu nome"
           />
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Tipo de conta</label>
+            <div className="flex space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="individual"
+                  checked={userType === 'individual'}
+                  onChange={(e) => setUserType(e.target.value as 'individual' | 'club')}
+                  className="mr-2"
+                />
+                <span>Individual</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="club"
+                  checked={userType === 'club'}
+                  onChange={(e) => setUserType(e.target.value as 'individual' | 'club')}
+                  className="mr-2"
+                />
+                <span>Clube</span>
+              </label>
+            </div>
+          </div>
 
           <Input
             label="Email"

@@ -9,7 +9,7 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, full_name?: string) => Promise<void>;
+  register: (email: string, password: string, full_name?: string, user_type?: string) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
   fetchClub: () => Promise<void>;
@@ -26,11 +26,15 @@ export const useAuth = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true });
         try {
-          const formData = new FormData();
-          formData.append('username', email);
-          formData.append('password', password);
+          const params = new URLSearchParams();
+          params.append('username', email);
+          params.append('password', password);
 
-          const response = await api.post('/api/auth/login', formData);
+          const response = await api.post('/api/auth/login', params, {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          });
           const { access_token } = response.data;
 
           localStorage.setItem('token', access_token);
@@ -46,14 +50,16 @@ export const useAuth = create<AuthState>()(
         }
       },
 
-      register: async (email: string, password: string, full_name?: string) => {
+      register: async (email: string, password: string, full_name?: string, user_type?: string) => {
         set({ isLoading: true });
         try {
-          await api.post('/api/auth/register', {
+          const response = await api.post('/api/auth/register', {
             email,
             password,
             full_name,
+            user_type,
           });
+          console.log('Register response:', response.data);
         } catch (error) {
           console.error('Register error:', error);
           throw error;

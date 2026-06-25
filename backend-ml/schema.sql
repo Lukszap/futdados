@@ -10,10 +10,22 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
+    user_type VARCHAR(20) DEFAULT 'individual', -- 'individual' or 'club'
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE
 );
+
+-- Adicionar coluna user_type se não existir (para tabelas já criadas)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name = 'user_type'
+    ) THEN
+        ALTER TABLE users ADD COLUMN user_type VARCHAR(20) DEFAULT 'individual';
+    END IF;
+END $$;
 
 -- Tabela de clubes
 CREATE TABLE IF NOT EXISTS clubs (
@@ -156,20 +168,26 @@ END;
 $$ language 'plpgsql';
 
 -- Aplicar trigger nas tabelas relevantes
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_clubs_updated_at ON clubs;
 CREATE TRIGGER update_clubs_updated_at BEFORE UPDATE ON clubs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_players_updated_at ON players;
 CREATE TRIGGER update_players_updated_at BEFORE UPDATE ON players
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_matches_updated_at ON matches;
 CREATE TRIGGER update_matches_updated_at BEFORE UPDATE ON matches
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_videos_updated_at ON videos;
 CREATE TRIGGER update_videos_updated_at BEFORE UPDATE ON videos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_player_metrics_updated_at ON player_match_metrics;
 CREATE TRIGGER update_player_metrics_updated_at BEFORE UPDATE ON player_match_metrics
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
