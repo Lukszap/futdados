@@ -27,7 +27,6 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
-    club_name: Optional[str] = None
 
 
 class UserResponse(BaseModel):
@@ -117,7 +116,7 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     # Create the club tied to this user so the dashboard works right away.
-    club_name = (user_data.club_name or user_data.full_name or user_data.email.split("@")[0]).strip()
+    club_name = (user_data.full_name or user_data.email.split("@")[0]).strip()
     new_club = Club(user_id=new_user.id, name=club_name or "Meu Clube")
     db.add(new_club)
     db.commit()

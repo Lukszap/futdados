@@ -11,7 +11,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [clubName, setClubName] = useState('');
   const [error, setError] = useState('');
   const { register, isLoading } = useAuth();
 
@@ -20,7 +19,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      await register(email, password, fullName, clubName);
+      await register(email, password, fullName);
       window.location.href = '/login';
     } catch (err) {
       setError(getApiErrorMessage(err, 'Erro ao criar conta'));
@@ -52,14 +51,6 @@ export default function RegisterPage() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Seu nome"
-          />
-
-          <Input
-            label="Nome do clube"
-            type="text"
-            value={clubName}
-            onChange={(e) => setClubName(e.target.value)}
-            placeholder="Nome do seu clube"
           />
 
           <Input

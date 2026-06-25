@@ -9,7 +9,7 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, full_name?: string, club_name?: string) => Promise<void>;
+  register: (email: string, password: string, full_name?: string) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
   fetchClub: () => Promise<void>;
@@ -46,14 +46,13 @@ export const useAuth = create<AuthState>()(
         }
       },
 
-      register: async (email: string, password: string, full_name?: string, club_name?: string) => {
+      register: async (email: string, password: string, full_name?: string) => {
         set({ isLoading: true });
         try {
           await api.post('/api/auth/register', {
             email,
             password,
             full_name,
-            club_name,
           });
         } catch (error) {
           console.error('Register error:', error);
