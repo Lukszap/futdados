@@ -1,10 +1,17 @@
-import cv2
-import numpy as np
-from ultralytics import YOLO
-from bytetracker import BYTETracker
-from typing import List, Dict, Tuple
 import json
 import os
+from typing import List, Dict, Tuple
+
+# ML imports - conditional for development
+try:
+    import cv2
+    import numpy as np
+    from ultralytics import YOLO
+    from bytetracker import BYTETracker
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+    print("ML dependencies not installed. Running in mock mode.")
 
 
 class MLPipeline:
@@ -17,6 +24,12 @@ class MLPipeline:
 
     def _load_models(self):
         """Carrega modelos YOLOv8 e ByteTrack"""
+        if not ML_AVAILABLE:
+            print("ML dependencies not available. Running in mock mode.")
+            self.yolo_model = None
+            self.byte_tracker = None
+            return
+
         try:
             # Carregar YOLOv8 (modelo pré-treinado para detecção de pessoas/bola)
             self.yolo_model = YOLO('yolov8x.pt')  # ou caminho customizado
@@ -145,8 +158,10 @@ class MLPipeline:
         print(f"Mock processing video: {video_path}")
         return self._calculate_metrics([], 30.0)
 
-    def generate_heatmap(self, detections: List[List[Dict]], video_size: Tuple[int, int]) -> np.ndarray:
+    def generate_heatmap(self, detections: List[List[Dict]], video_size: Tuple[int, int]):
         """Gera heatmap de posições"""
+        if not ML_AVAILABLE:
+            return None
         # Implementação placeholder
         heatmap = np.zeros((video_size[1], video_size[0]))
         return heatmap

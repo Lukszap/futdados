@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import stripe
+# import stripe  # Commented out - Stripe not installed
 
 from app.database import get_db
 from app.models.database import Club, SubscriptionPlan, SubscriptionStatus
@@ -12,7 +12,7 @@ from pydantic import BaseModel
 router = APIRouter()
 
 # Initialize Stripe
-stripe.api_key = settings.STRIPE_API_KEY
+# stripe.api_key = settings.STRIPE_API_KEY  # Commented out - Stripe not installed
 
 
 class SubscriptionCreate(BaseModel):
@@ -35,32 +35,8 @@ async def create_checkout_session(
     db: Session = Depends(get_db)
 ):
     """Create Stripe checkout session for subscription"""
-    try:
-        # Map plan to Stripe price ID
-        price_id = settings.STRIPE_PRICE_ID_PRO if subscription_data.plan == SubscriptionPlan.PRO else settings.STRIPE_PRICE_ID_BASIC
-
-        # Create Stripe checkout session
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[
-                {
-                    'price': price_id,
-                    'quantity': 1,
-                },
-            ],
-            mode='subscription',
-            success_url='http://localhost:3000/dashboard?subscription=success',
-            cancel_url='http://localhost:3000/dashboard?subscription=cancelled',
-            customer_email=current_club.user.email,
-            metadata={
-                'club_id': current_club.id
-            }
-        )
-
-        return {"checkout_url": checkout_session.url}
-
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    # TODO: Implement when Stripe is installed
+    raise HTTPException(status_code=501, detail="Stripe not installed - payment features disabled")
 
 
 @router.get("/", response_model=SubscriptionResponse)

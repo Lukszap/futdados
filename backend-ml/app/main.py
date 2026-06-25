@@ -11,7 +11,7 @@ from app.ml.pipeline import MLPipeline
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)  # Tabelas criadas manualmente no Supabase
     ml_pipeline = MLPipeline()
     app.state.ml_pipeline = ml_pipeline
     yield
