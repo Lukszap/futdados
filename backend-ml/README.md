@@ -31,13 +31,16 @@ cp .env.example .env
 - `STRIPE_PRICE_ID_BASIC`: ID do preço plano Basic
 - `STRIPE_PRICE_ID_PRO`: ID do preço plano Pro
 
-### 4. Configurar Banco de Dados
-```bash
-# Criar banco PostgreSQL
-createdb football_analytics
+### 4. Configurar Banco de Dados (Supabase)
 
-# As tabelas serão criadas automaticamente no primeiro startup
-```
+**No Supabase Dashboard:**
+1. Acesse seu projeto no Supabase
+2. Vá em **SQL Editor**
+3. Copie e execute o conteúdo de `schema.sql`
+4. As tabelas serão criadas automaticamente
+
+**Ou via API (alternativa):**
+As tabelas também serão criadas automaticamente no primeiro startup do FastAPI.
 
 ### 5. Rodar servidor
 ```bash
